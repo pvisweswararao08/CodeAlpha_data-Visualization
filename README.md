@@ -3,6 +3,9 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
 ![NumPy](https://img.shields.io/badge/NumPy-only-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Live Site](https://img.shields.io/badge/Live-EdgeOne%20Demo-blueviolet?style=flat-square&logo=vercel)
+
+🚀 **Live Website:** [https://datavisuvalizationml.edgeone.app/](https://datavisuvalizationml.edgeone.app/)
 
 > **Machine Learning stock price prediction built entirely from scratch using pure NumPy — no scikit-learn required.**
 
@@ -104,31 +107,24 @@ pip install pandas numpy matplotlib seaborn
 ```
 > No scikit-learn needed — all models built from scratch in NumPy!
 
-### 2. Generate the Dataset (Task 2 first)
+### 2. Run Task 3 ML Prediction Pipeline
 ```bash
-cd ../task2_eda
-python -X utf8 finance_eda.py
-```
-
-### 3. Run Task 3 ML
-```bash
-cd ../task3_ml
 python -X utf8 task3_ml_prediction.py
 ```
 
-Charts saved to `ml_output/` and results to `ml_output/model_results.csv`.
+Charts and results will be saved to the `ml_output/` directory.
 
 ---
 
 ## Project Structure
 
 ```
-task3_ml/
+CodeAlpha_data-Visualization/
 ├── task3_ml_prediction.py   ← Main ML pipeline (pure NumPy)
-├── index.html               ← Web dashboard
-├── README.md
+├── index.html               ← Web dashboard (runs in browser)
 ├── requirements.txt
 ├── .gitignore
+├── finance_dataset.csv      ← Dataset
 └── ml_output/
     ├── model_results.csv
     ├── fig1_actual_vs_predicted.png

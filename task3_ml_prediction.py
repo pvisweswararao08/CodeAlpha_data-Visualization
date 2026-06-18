@@ -139,7 +139,7 @@ def dir_acc(y, yh): return float(np.mean(np.sign(y) == np.sign(yh)) * 100)
 #  1. LOAD DATA
 # ══════════════════════════════════════════════════════════
 print("\n[1] Loading dataset...")
-df = pd.read_csv("../task2_eda/eda_output/finance_dataset.csv", parse_dates=["Date"])
+df = pd.read_csv("finance_dataset.csv", parse_dates=["Date"])
 df = df.sort_values(["Ticker","Date"]).reset_index(drop=True)
 df["Close"] = df.groupby("Ticker")["Close"].transform(lambda x: x.ffill())
 print(f"    Rows: {len(df):,}  |  Tickers: {df['Ticker'].nunique()}")
