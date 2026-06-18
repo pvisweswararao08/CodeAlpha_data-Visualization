@@ -1,138 +1,156 @@
-# 📊 CodeAlpha — Data Science Project
+# Task 3 — ML Stock Price Prediction
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
-![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-purple?style=flat-square)
-![NumPy](https://img.shields.io/badge/NumPy-ML%20from%20Scratch-orange?style=flat-square)
-![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualisation-red?style=flat-square)
+![NumPy](https://img.shields.io/badge/NumPy-only-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-> A complete data science pipeline — **Exploratory Data Analysis** + **Machine Learning** on synthetic stock market data covering 12 stocks across 6 sectors (2022–2024).
+> **Machine Learning stock price prediction built entirely from scratch using pure NumPy — no scikit-learn required.**
 
 ---
 
-## 📁 Project Structure
+## Overview
 
-```
-CodeAlpha_data-Visualization/
-│
-├── task2_eda/                        ← Task 2: Exploratory Data Analysis
-│   ├── finance_eda.py                   Full EDA pipeline (12 charts + 4 tests)
-│   ├── finance_eda_video.py             Live animated GIF dashboard (39s)
-│   ├── index.html                       Web dashboard
-│   ├── requirements.txt
-│   └── eda_output/
-│       ├── finance_dataset.csv          Synthetic dataset (9,384 rows)
-│       ├── fig1_price_history.png
-│       ├── fig2_missing_values.png
-│       ├── fig3_return_distributions.png
-│       ├── fig4_correlation_heatmap.png
-│       ├── fig5_risk_return.png
-│       ├── fig6_sector_performance.png
-│       ├── fig7_volume_analysis.png
-│       ├── fig8_anomaly_detection.png
-│       ├── fig9_pe_beta_boxplot.png
-│       ├── fig10_day_of_week.png
-│       ├── fig11_rolling_volatility.png
-│       └── fig12_summary_dashboard.png
-│
-└── task3_ml/                         ← Task 3: Machine Learning Prediction
-    ├── task3_ml_prediction.py           Pure NumPy ML pipeline (no sklearn)
-    ├── index.html                       Web dashboard
-    ├── requirements.txt
-    └── ml_output/
-        ├── model_results.csv            All metrics (RMSE, MAE, R², Dir. Acc.)
-        ├── fig1_actual_vs_predicted.png
-        ├── fig2_price_predictions.png
-        ├── fig3_model_comparison.png
-        ├── fig4_feature_importance.png
-        ├── fig5_directional_accuracy.png
-        ├── fig6_r2_heatmap.png
-        └── fig7_ml_dashboard.png
-```
+This project trains **3 machine learning models** on synthetic stock market data to predict next-day returns for 12 stocks across 6 sectors (2022–2024).
+
+All models are implemented **from scratch** using only NumPy and Pandas — no scikit-learn, no TensorFlow, no external ML libraries.
 
 ---
 
-## 📌 Task 2 — Exploratory Data Analysis
+## Models
 
-### Dataset
-| Property | Value |
-|---|---|
-| Stocks | 12 (AAPL, MSFT, GOOGL, AMZN, TSLA, JPM, BAC, GS, JNJ, PFE, XOM, CVX) |
-| Sectors | Technology · Consumer · Automotive · Finance · Healthcare · Energy |
-| Date Range | Jan 2022 – Dec 2024 |
-| Rows | **9,384** |
-
-### Key Findings
-- 📉 All 12 stocks fail normality test — fat tails (leptokurtic distribution)
-- 🎯 No stock has statistically significant mean return — consistent with efficient market hypothesis
-- 🔴 **73 price anomalies** detected via Z-score (|Z| > 3) — mostly during 2022 crash
-- 🏦 Finance stocks (JPM, BAC, GS) are highly correlated — Healthcare provides diversification
-- ⚡ TSLA is most volatile — Healthcare most stable
-- 📅 No day-of-week effect (ANOVA p = 0.82)
-
-### Hypothesis Testing
-| Test | Result |
-|---|---|
-| Shapiro-Wilk (normality) | ❌ All stocks fail — fat tails |
-| T-Test (mean ≠ 0) | ❌ No significant mean return |
-| ANOVA (sector returns) | ❌ No significant sector difference |
-| KS-Test (PE normality) | ✅ PE Ratios are normally distributed |
-
-### Run Task 2
-```bash
-pip install pandas numpy matplotlib seaborn scipy
-python -X utf8 task2_eda/finance_eda.py
-```
-
----
-
-## 🤖 Task 3 — Machine Learning Stock Prediction
-
-> All models built **from scratch in pure NumPy** — no scikit-learn!
-
-### Models
-| Model | Method | Best RMSE Stock |
+| Model | Method | Description |
 |---|---|---|
-| Linear Regression | OLS Normal Equation | JNJ (0.01283) |
-| Ridge Regression | L2-Regularised OLS | JNJ (0.01274) ✅ |
-| Neural Network (MLP) | Adam + ReLU + Xavier | JNJ (0.08675) |
+| **Linear Regression** | OLS Normal Equation | Fast, interpretable baseline |
+| **Ridge Regression** | L2-Regularised OLS (α=1.0) | Prevents overfitting on 17 features |
+| **Neural Network (MLP)** | Adam + ReLU + Xavier Init | 2-layer feedforward NN from scratch |
 
 ### Neural Network Architecture
 ```
-Input(17) → Dense(64, ReLU) → Dense(1, Linear)
-Optimiser: Adam | lr=5e-4 | Epochs=150 | Batch=64
+Input (17) → Dense(64, ReLU) → Dense(1, Linear)
+Optimiser : Adam  (lr=5e-4, β₁=0.9, β₂=0.999)
+Epochs    : 150   |  Batch: 64  |  Loss: MSE
 ```
 
-### Results Summary
-| Metric | Value |
-|---|---|
-| Avg Ridge RMSE | ~0.026 |
-| Avg NN Directional Acc. | ~46.6% |
-| Best Directional Acc. | PFE — 56.1% |
-| Features Engineered | 17 |
-| Train / Test Split | 80% / 20% |
+---
 
-### Run Task 3
+## Dataset
+
+The dataset is generated by **Task 2 EDA** (`finance_eda.py`) and saved as `finance_dataset.csv`.
+
+| Property | Value |
+|---|---|
+| Stocks | 12 (AAPL, MSFT, GOOGL, AMZN, TSLA, JPM, BAC, GS, JNJ, PFE, XOM, CVX) |
+| Sectors | 6 (Tech, Consumer, Automotive, Finance, Healthcare, Energy) |
+| Date Range | Jan 2022 – Dec 2024 |
+| Rows | 9,384 |
+| Train / Test Split | 80% / 20% (time-based) |
+
+---
+
+## 17 Engineered Features
+
+| Category | Features |
+|---|---|
+| Lag Returns | 1, 2, 3, 5, 10 day lag returns |
+| Moving Averages | Price / MA5, MA10, MA20, MA50 ratios |
+| Bollinger Bands | Band position (0 = lower, 1 = upper) |
+| Momentum | RSI (14-day), MACD, MACD Histogram |
+| Volume | 10-day volume ratio |
+| Volatility | 20-day rolling return std |
+| Calendar | Day of week, Month |
+
+---
+
+## Results
+
+| Ticker | LR RMSE | Ridge RMSE | NN RMSE | NN Dir. Acc. |
+|---|---|---|---|---|
+| AAPL | 0.01981 | 0.01981 | 0.12342 | 47.4% |
+| MSFT | 0.02528 | 0.02520 | 0.18064 | 47.5% |
+| GOOGL | 0.01899 | 0.01893 | 0.14789 | 44.5% |
+| AMZN | 0.02556 | 0.02555 | 0.18179 | 40.3% |
+| TSLA | 0.03870 | 0.03869 | 0.16152 | 51.1% |
+| JPM | 0.01903 | 0.01903 | 0.14146 | 46.4% |
+| BAC | 0.02427 | 0.02411 | 0.18245 | 44.5% |
+| GS | 0.02418 | 0.02389 | 0.14450 | 44.6% |
+| JNJ | 0.01283 | 0.01274 | 0.08675 | 46.7% |
+| PFE | 0.02715 | 0.02705 | 0.26766 | **56.1%** |
+| XOM | 0.03097 | 0.03094 | 0.20819 | 43.8% |
+| CVX | 0.03023 | 0.03017 | 0.22385 | 46.8% |
+
+**Key Insight:** Ridge wins on RMSE for 10/12 stocks. Average directional accuracy (~46.6%) is near-random — confirming findings from Task 2 EDA that stock returns follow a near-random walk.
+
+---
+
+## Output Charts
+
+| Chart | Description |
+|---|---|
+| `fig1_actual_vs_predicted.png` | NN actual vs predicted returns (all 12 stocks) |
+| `fig2_price_predictions.png` | Predicted vs actual price path — all 3 models |
+| `fig3_model_comparison.png` | RMSE, MAE & directional accuracy comparison |
+| `fig4_feature_importance.png` | NN input weight magnitude per feature |
+| `fig5_directional_accuracy.png` | Up/down accuracy per stock & model |
+| `fig6_r2_heatmap.png` | R² score heatmap by stock & model |
+| `fig7_ml_dashboard.png` | Full ML summary dashboard |
+
+---
+
+## How to Run
+
+### 1. Prerequisites
 ```bash
 pip install pandas numpy matplotlib seaborn
-python -X utf8 task3_ml/task3_ml_prediction.py
+```
+> No scikit-learn needed — all models built from scratch in NumPy!
+
+### 2. Generate the Dataset (Task 2 first)
+```bash
+cd ../task2_eda
+python -X utf8 finance_eda.py
+```
+
+### 3. Run Task 3 ML
+```bash
+cd ../task3_ml
+python -X utf8 task3_ml_prediction.py
+```
+
+Charts saved to `ml_output/` and results to `ml_output/model_results.csv`.
+
+---
+
+## Project Structure
+
+```
+task3_ml/
+├── task3_ml_prediction.py   ← Main ML pipeline (pure NumPy)
+├── index.html               ← Web dashboard
+├── README.md
+├── requirements.txt
+├── .gitignore
+└── ml_output/
+    ├── model_results.csv
+    ├── fig1_actual_vs_predicted.png
+    ├── fig2_price_predictions.png
+    ├── fig3_model_comparison.png
+    ├── fig4_feature_importance.png
+    ├── fig5_directional_accuracy.png
+    ├── fig6_r2_heatmap.png
+    └── fig7_ml_dashboard.png
 ```
 
 ---
 
-## 🚀 Technologies
+## Technologies
 
-| Tool | Purpose |
-|---|---|
-| Python 3.8+ | Core language (tested on 3.14) |
-| Pandas | Data loading & feature engineering |
-| NumPy | ML models from scratch |
-| Matplotlib | Dark-themed charts & animation |
-| Seaborn | Heatmaps & styled plots |
-| SciPy | Hypothesis testing |
+- **Python 3.8+** (tested on Python 3.14)
+- **NumPy** — all ML models from scratch
+- **Pandas** — data loading and feature engineering
+- **Matplotlib / Seaborn** — visualisations (dark theme)
 
 ---
 
-## 📄 License
+## License
 
 MIT License — free to use and modify.
