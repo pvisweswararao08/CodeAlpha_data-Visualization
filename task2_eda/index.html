@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task 2 — Finance Exploratory Data Analysis</title>
+  <meta name="description" content="Task 2: Exploratory Data Analysis on synthetic stock market data covering 12 stocks across 6 sectors from 2022 to 2024." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #21262d;
+      --border: #30363d; --text1: #e6edf3; --text2: #8b949e;
+      --blue: #58a6ff; --green: #3fb950; --red: #f78166;
+      --purple: #d2a8ff; --orange: #ffa657; --yellow: #e3b341;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text1); overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(13,17,23,0.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; height: 58px;
+    }
+    .nav-logo { font-weight: 800; font-size: 1rem; background: linear-gradient(90deg,var(--blue),var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-tag { font-size: 0.72rem; background: #58a6ff22; color: var(--blue); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; }
+    .nav-links { display: flex; gap: 0.2rem; }
+    .nav-links a { color: var(--text2); text-decoration: none; font-size: 0.82rem; font-weight: 500; padding: 0.35rem 0.8rem; border-radius: 6px; transition: all 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text1); background: var(--surface2); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 2rem 4rem; position: relative;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, #58a6ff1a, transparent),
+                  radial-gradient(ellipse 50% 40% at 80% 90%, #3fb95010, transparent);
+      pointer-events: none;
+    }
+    .hero-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.78rem; color: var(--text2); font-weight: 500; margin-bottom: 1.5rem; animation: fadeUp 0.6s ease both; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.4)} }
+    h1 { font-size: clamp(2.2rem,6vw,4rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; animation: fadeUp 0.7s 0.1s ease both; }
+    h1 span { background: linear-gradient(90deg,var(--blue),var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { color: var(--text2); font-size: 1.05rem; max-width: 520px; line-height: 1.7; margin: 1.2rem auto 2.5rem; animation: fadeUp 0.7s 0.2s ease both; }
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.7s 0.3s ease both; }
+    .btn { padding: 0.6rem 1.5rem; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+    .btn-primary { background: var(--blue); color: #000; }
+    .btn-primary:hover { background: #79c0ff; transform: translateY(-2px); box-shadow: 0 8px 24px #58a6ff33; }
+    .btn-outline { background: transparent; color: var(--text1); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--surface2); transform: translateY(-2px); }
+
+    /* STATS STRIP */
+    .stats-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; padding: 2rem 2rem 0; animation: fadeUp 0.7s 0.4s ease both; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.6rem; text-align: center; min-width: 130px; transition: border-color 0.2s, transform 0.2s; }
+    .stat-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+    .stat-val { font-size: 1.7rem; font-weight: 800; }
+    .stat-lbl { font-size: 0.72rem; color: var(--text2); font-weight: 500; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* SECTIONS */
+    section { padding: 5rem 2rem; max-width: 1280px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 3rem; }
+    .section-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.28rem 0.85rem; border-radius: 20px; margin-bottom: 1rem; }
+    .tag-blue { background: #58a6ff22; color: var(--blue); }
+    .tag-orange { background: #ffa65722; color: var(--orange); }
+    .section-header h2 { font-size: clamp(1.5rem,4vw,2.2rem); font-weight: 700; letter-spacing: -0.02em; }
+    .section-header p { color: var(--text2); margin-top: 0.6rem; font-size: 0.95rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .divider { height: 1px; background: var(--border); max-width: 1280px; margin: 0 auto; }
+
+    /* GIF */
+    .gif-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 0 60px #58a6ff0d; margin-bottom: 2.5rem; }
+    .gif-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+    .gif-dots span { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 4px; }
+    .gif-title { font-size: 0.88rem; font-weight: 600; }
+    .gif-badge { margin-left: auto; font-size: 0.7rem; background: #ffa65722; color: var(--orange); padding: 0.2rem 0.7rem; border-radius: 20px; font-weight: 600; }
+    .gif-wrapper img { width: 100%; display: block; }
+
+    /* CHART GRID */
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s; cursor: pointer; }
+    .chart-card:hover { transform: translateY(-4px); border-color: var(--blue); box-shadow: 0 12px 40px rgba(88,166,255,0.1); }
+    .chart-card.wide { grid-column: 1 / -1; }
+    .chart-img { width: 100%; display: block; background: #0d1117; }
+    .chart-footer { padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .chart-title { font-size: 0.875rem; font-weight: 600; }
+    .chart-desc { font-size: 0.75rem; color: var(--text2); margin-top: 0.2rem; }
+    .chart-num { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text2); background: var(--surface2); padding: 0.2rem 0.5rem; border-radius: 4px; flex-shrink: 0; }
+
+    /* HYPOTHESIS TABLE */
+    .h-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin-top: 1.5rem; }
+    .h-table th { background: var(--surface2); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text2); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .h-table td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); vertical-align: top; }
+    .h-table tr:hover td { background: var(--surface2); }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge-red { background: #f7816622; color: var(--red); }
+    .badge-green { background: #3fb95022; color: var(--green); }
+
+    /* FINDINGS */
+    .findings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; display: flex; gap: 0.85rem; transition: border-color 0.2s, transform 0.2s; }
+    .finding-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .finding-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .finding-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .finding-body { font-size: 0.8rem; color: var(--text2); line-height: 1.6; }
+
+    /* ISSUES TABLE */
+    .issues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .issue-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; border-left: 3px solid var(--orange); }
+    .issue-title { font-size: 0.875rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+    .issue-detail { font-size: 0.78rem; color: var(--text2); margin-bottom: 0.5rem; }
+    .issue-fix { font-size: 0.78rem; color: var(--green); }
+
+    /* LIGHTBOX */
+    #lightbox { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); align-items: center; justify-content: center; cursor: zoom-out; }
+    #lightbox.open { display: flex; }
+    #lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 10px; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    footer { border-top: 1px solid var(--border); text-align: center; padding: 2rem; color: var(--text2); font-size: 0.82rem; }
+    footer strong { color: var(--text1); }
+    @media(max-width:640px){ nav{padding:0 1rem;} section{padding:3rem 1.25rem;} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:0.75rem">
+    <div class="nav-logo">📊 Finance EDA</div>
+    <div class="nav-tag">Task 2</div>
+  </div>
+  <div class="nav-links">
+    <a href="#overview" class="active">Overview</a>
+    <a href="#animation">Animation</a>
+    <a href="#charts">Charts</a>
+    <a href="#stats">Statistics</a>
+    <a href="#findings">Findings</a>
+  </div>
+</nav>
+
+<div id="lightbox" onclick="closeLightbox()"><img id="lb-img" src="" alt="" /></div>
+
+<!-- HERO -->
+<section id="overview" style="padding-top:0;max-width:100%">
+  <div class="hero">
+    <div class="hero-tag"><span class="dot"></span> Task 2 &nbsp;·&nbsp; Exploratory Data Analysis</div>
+    <h1>Stock Market <span>EDA</span></h1>
+    <p class="hero-sub">Deep dive into 3 years of synthetic stock market data — trends, patterns, anomalies, correlations, and statistical hypothesis testing across 12 stocks and 6 sectors.</p>
+    <div class="hero-btns">
+      <a href="#animation" class="btn btn-primary">▶ Live Animation</a>
+      <a href="#charts" class="btn btn-outline">📊 View All Charts</a>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-card"><div class="stat-val" style="color:var(--blue)">12</div><div class="stat-lbl">Stocks</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">9,384</div><div class="stat-lbl">Rows</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--purple)">6</div><div class="stat-lbl">Sectors</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--orange)">12</div><div class="stat-lbl">Charts</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--yellow)">4</div><div class="stat-lbl">Tests</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--red)">73</div><div class="stat-lbl">Anomalies</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LIVE ANIMATION -->
+<section id="animation">
+  <div class="section-header fade-in">
+    <div class="section-tag tag-orange">Live Dashboard</div>
+    <h2>Animated Market Dashboard</h2>
+    <p>All 6 panels updating live — 391 frames, 39 seconds at 10fps.</p>
+  </div>
+  <div class="gif-wrapper fade-in">
+    <div class="gif-header">
+      <div class="gif-dots">
+        <span style="background:#f78166"></span>
+        <span style="background:#ffa657"></span>
+        <span style="background:#3fb950"></span>
+      </div>
+      <div class="gif-title">Finance EDA — Live Market Dashboard (2022–2024)</div>
+      <div class="gif-badge">▶ ANIMATED · 39s</div>
+    </div>
+    <!-- GIF excluded from upload (38 MB). View locally by opening index.html from the full project folder. -->
+    <div style="
+      background: #0d1117;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 4rem 2rem; gap: 1rem; text-align: center;
+    ">
+      <div style="font-size:3rem">🎬</div>
+      <div style="font-size:1.1rem;font-weight:700;color:#e6edf3">Live Animation (38 MB GIF)</div>
+      <div style="font-size:0.85rem;color:#8b949e;max-width:420px;line-height:1.7">
+        The animated dashboard could not be hosted here due to file size limits.<br/>
+        Run <code style="background:#21262d;padding:2px 8px;border-radius:4px;color:#58a6ff">python finance_eda_video.py</code>
+        locally to generate and watch the full 39-second live animation.
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem">
+        <span style="background:#ffa65722;color:#ffa657;padding:0.3rem 0.9rem;border-radius:20px;font-size:0.78rem;font-weight:700">391 Frames</span>
+        <span style="background:#58a6ff22;color:#58a6ff;padding:0.3rem 0.9rem;border-radius:20px;font-size:0.78rem;font-weight:700">10 FPS</span>
+        <span style="background:#3fb95022;color:#3fb950;padding:0.3rem 0.9rem;border-radius:20px;font-size:0.78rem;font-weight:700">6 Live Panels</span>
+        <span style="background:#d2a8ff22;color:#d2a8ff;padding:0.3rem 0.9rem;border-radius:20px;font-size:0.78rem;font-weight:700">39 Seconds</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CHARTS -->
+<section id="charts">
+  <div class="section-header fade-in">
+    <div class="section-tag tag-blue">Visualisations</div>
+    <h2>12 EDA Charts</h2>
+    <p>Click any chart to enlarge. Each chart answers one of the 8 questions posed before analysis.</p>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card wide fade-in" onclick="openLightbox('eda_output/fig1_price_history.png')">
+      <img src="eda_output/fig1_price_history.png" class="chart-img" alt="Price history" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Stock Price History + MA20 & MA50</div><div class="chart-desc">All 12 stocks with moving average overlays across 3 years</div></div><div class="chart-num">Fig 01</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig2_missing_values.png')">
+      <img src="eda_output/fig2_missing_values.png" class="chart-img" alt="Missing values" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Data Quality Check</div><div class="chart-desc">Missing values heatmap — 0.64% in Close & Volume</div></div><div class="chart-num">Fig 02</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig3_return_distributions.png')">
+      <img src="eda_output/fig3_return_distributions.png" class="chart-img" alt="Return distributions" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Daily Return Distributions</div><div class="chart-desc">Histograms with normal fit — all stocks show fat tails</div></div><div class="chart-num">Fig 03</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig4_correlation_heatmap.png')">
+      <img src="eda_output/fig4_correlation_heatmap.png" class="chart-img" alt="Correlation" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Cross-Stock Correlation Matrix</div><div class="chart-desc">Finance sector stocks are strongly correlated</div></div><div class="chart-num">Fig 04</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig5_risk_return.png')">
+      <img src="eda_output/fig5_risk_return.png" class="chart-img" alt="Risk return" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Risk–Return Profile by Sector</div><div class="chart-desc">Annualised return vs volatility scatter plot</div></div><div class="chart-num">Fig 05</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig6_sector_performance.png')">
+      <img src="eda_output/fig6_sector_performance.png" class="chart-img" alt="Sector performance" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Cumulative Sector Returns</div><div class="chart-desc">3-year cumulative return comparison across all sectors</div></div><div class="chart-num">Fig 06</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig7_volume_analysis.png')">
+      <img src="eda_output/fig7_volume_analysis.png" class="chart-img" alt="Volume" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Trading Volume Analysis</div><div class="chart-desc">Avg volume by stock and by day of week</div></div><div class="chart-num">Fig 07</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig8_anomaly_detection.png')">
+      <img src="eda_output/fig8_anomaly_detection.png" class="chart-img" alt="Anomalies" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Anomaly Detection (|Z-score| &gt; 3)</div><div class="chart-desc">73 extreme return spikes flagged — mostly during 2022 crash</div></div><div class="chart-num">Fig 08</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig9_pe_beta_boxplot.png')">
+      <img src="eda_output/fig9_pe_beta_boxplot.png" class="chart-img" alt="PE Beta" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">PE Ratio & Beta by Sector</div><div class="chart-desc">Valuation and market sensitivity distributions</div></div><div class="chart-num">Fig 09</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig10_day_of_week.png')">
+      <img src="eda_output/fig10_day_of_week.png" class="chart-img" alt="Day of week" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">Day-of-Week Effect</div><div class="chart-desc">No strong calendar effect found (Q5 answered)</div></div><div class="chart-num">Fig 10</div></div>
+    </div>
+    <div class="chart-card fade-in" onclick="openLightbox('eda_output/fig11_rolling_volatility.png')">
+      <img src="eda_output/fig11_rolling_volatility.png" class="chart-img" alt="Volatility" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">20-Day Rolling Volatility</div><div class="chart-desc">TSLA most volatile — Healthcare most stable</div></div><div class="chart-num">Fig 11</div></div>
+    </div>
+    <div class="chart-card wide fade-in" onclick="openLightbox('eda_output/fig12_summary_dashboard.png')">
+      <img src="eda_output/fig12_summary_dashboard.png" class="chart-img" alt="Dashboard" loading="lazy"/>
+      <div class="chart-footer"><div><div class="chart-title">EDA Summary Dashboard</div><div class="chart-desc">Sharpe ratios, sector volume share, top correlations & key stats</div></div><div class="chart-num">Fig 12</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HYPOTHESIS TESTING -->
+<section id="stats">
+  <div class="section-header fade-in">
+    <div class="section-tag tag-blue">Hypothesis Testing</div>
+    <h2>Statistical Validation</h2>
+    <p>4 statistical tests to validate assumptions and answer key questions about the data.</p>
+  </div>
+  <div class="fade-in" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+    <table class="h-table">
+      <thead><tr><th>Test</th><th>Question</th><th>Result</th><th>Conclusion</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Shapiro-Wilk</strong></td><td>Are daily returns normally distributed?</td><td><span class="badge badge-red">p ≈ 0.000</span></td><td>All 12 stocks FAIL — fat tails (leptokurtic)</td></tr>
+        <tr><td><strong>T-Test (1-sample)</strong></td><td>Is mean daily return significantly ≠ 0?</td><td><span class="badge badge-red">p &gt; 0.05</span></td><td>No stock has significant mean — random walk behaviour</td></tr>
+        <tr><td><strong>ANOVA</strong></td><td>Do sectors have different mean returns?</td><td><span class="badge badge-red">F=0.44, p=0.82</span></td><td>No significant sector difference</td></tr>
+        <tr><td><strong>Kolmogorov-Smirnov</strong></td><td>Are PE Ratios normally distributed?</td><td><span class="badge badge-green">p = 0.97</span></td><td>PE Ratios ARE normal (mean ≈ 22, std ≈ 8)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- KEY FINDINGS -->
+<section id="findings">
+  <div class="section-header fade-in">
+    <div class="section-tag tag-blue">Findings</div>
+    <h2>Key Findings & Data Issues</h2>
+  </div>
+  <div class="findings-grid">
+    <div class="finding-card fade-in"><div class="finding-icon">📉</div><div><div class="finding-title">Non-Normal Returns</div><div class="finding-body">All 12 stocks fail normality — fat tails consistent with real financial market behaviour.</div></div></div>
+    <div class="finding-card fade-in"><div class="finding-icon">🎯</div><div><div class="finding-title">Efficient Market</div><div class="finding-body">No stock has a statistically significant mean return — consistent with the efficient market hypothesis.</div></div></div>
+    <div class="finding-card fade-in"><div class="finding-icon">🔴</div><div><div class="finding-title">73 Price Anomalies</div><div class="finding-body">Z-score detection flagged 73 extreme return spikes — concentrated in the 2022 market crash period.</div></div></div>
+    <div class="finding-card fade-in"><div class="finding-icon">🏦</div><div><div class="finding-title">Sector Clustering</div><div class="finding-body">JPM, BAC, GS move together (high correlation). Healthcare provides natural portfolio diversification.</div></div></div>
+    <div class="finding-card fade-in"><div class="finding-icon">⚡</div><div><div class="finding-title">TSLA Most Volatile</div><div class="finding-body">Tesla shows highest rolling volatility but also highest average daily return (+0.164%).</div></div></div>
+    <div class="finding-card fade-in"><div class="finding-icon">📅</div><div><div class="finding-title">No Day-of-Week Effect</div><div class="finding-body">ANOVA confirms no significant return difference across Mon–Fri. "Monday effect" not present.</div></div></div>
+  </div>
+
+  <h3 style="font-size:1rem;font-weight:700;margin:2.5rem 0 0.5rem">⚠️ Data Issues & Recommendations</h3>
+  <div class="issues-grid">
+    <div class="issue-card fade-in"><div class="issue-title">🔍 Missing Values</div><div class="issue-detail">60 Close + 60 Volume cells missing (0.64%)</div><div class="issue-fix">✅ Fixed with forward-fill per ticker</div></div>
+    <div class="issue-card fade-in"><div class="issue-title">⚡ Price Anomalies</div><div class="issue-detail">73 extreme spikes detected via |Z-score| &gt; 3</div><div class="issue-fix">→ Winsorize at 99th percentile before modelling</div></div>
+    <div class="issue-card fade-in"><div class="issue-title">📊 Non-Normal Returns</div><div class="issue-detail">All stocks fail Shapiro-Wilk normality test</div><div class="issue-fix">→ Use log-returns or robust statistics</div></div>
+    <div class="issue-card fade-in"><div class="issue-title">📐 Beta Outliers</div><div class="issue-detail">126 rows with Beta &gt; 2</div><div class="issue-fix">→ Cap at 3σ or investigate data source</div></div>
+    <div class="issue-card fade-in"><div class="issue-title">💹 Negative PE</div><div class="issue-detail">30 rows with negative PE ratio</div><div class="issue-fix">→ Flag loss-making periods separately</div></div>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Task 2 — Exploratory Data Analysis</strong></p>
+  <p style="margin-top:0.4rem;color:#484f58">Python · Pandas · NumPy · Matplotlib · Seaborn · SciPy</p>
+</footer>
+
+<script>
+  function openLightbox(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); document.body.style.overflow=''; }
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeLightbox(); });
+  const observer = new IntersectionObserver(entries=>{ entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); }); },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+  const sections=document.querySelectorAll('section[id]');
+  const navLinks=document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll',()=>{ let cur=''; sections.forEach(s=>{ if(window.scrollY>=s.offsetTop-80) cur=s.id; }); navLinks.forEach(a=>{ a.classList.toggle('active',a.getAttribute('href')==='#'+cur); }); },{passive:true});
+</script>
+</body>
+</html>
